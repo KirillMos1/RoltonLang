@@ -1,6 +1,4 @@
-import if_comps
-
-vars_list = {"system" : ["str", "RoltonLang"]}
+vars_list = {}
 
 def printer(args):
     returned = ""
@@ -15,7 +13,7 @@ def printer(args):
             elif "\"" in arg:
                 arg = arg.replace("\"", "")
             else:
-                print("Error 121 - Var not found")
+                print("\033[35mError 121 - Var not found\033[0m")
                 return
         returned += str(arg) + " "
     print(returned)
@@ -25,7 +23,7 @@ def inputing(text, var):
 
 def typing(var):
     if var not in vars_list.keys():
-        print("Error 121 - Var not found")
+        print("\033[35mError 121 - Var not found\033[0m")
     else:
         print(f"type {vars_list[var][0]}")
 
@@ -33,8 +31,8 @@ def typing(var):
 #     for doing in doings:
 #         intepriter(doing)
 
-def intepriter(com):
-    if not com: com = input(">>> ")
+def runner(com):
+    global ifer_res, ifer
     if "(" in com and ")" in com:
         func = com.split("(")[0]
         match func:
@@ -50,7 +48,8 @@ def intepriter(com):
             case "input":
                 args = com.split("(")[1].replace(")", "").split(", ")
                 if len(args) < 2:
-                    print("Error 111 - invalid syntax")
+                    print("\033[35mError 111 - invalid syntax\033[0m")
+                    return
                 else:
                     if "\"" in args[0]:
                         inputing(args[0].replace("\"", ""), args[1])
@@ -62,7 +61,8 @@ def intepriter(com):
                                 args[0] = vars_list[args[0]][1]
                                 inputing(args[0], args[1])
                             else:
-                                print("Error 121 - Var not found")
+                                print("\033[35mError 121 - Var not found\033[0m")
+                                return
             case "exit":
                 raise SystemExit()
     elif "if" in com:
@@ -84,7 +84,7 @@ def intepriter(com):
                             tp1 = vars_list[el1][0]
                             el1 = el1n
                         else:
-                            print("Error 121 - Var not found")
+                            print("\033[35mError 121 - Var not found\033[0m")
                             return
                 if "\"" in el2:
                     el2 = rl1.replace("\"", "")
@@ -94,22 +94,27 @@ def intepriter(com):
                         tp2 = "int"
                     else:
                         if el2 in vars_list.keys():
-                            el2 = vars_list[el2][1]
+                            el2n = vars_list[el2][1]
                             tp2 = vars_list[el2][0]
+                            el2 = el2n
                         else:
-                            print("Error 121 - Var not found")
+                            print("\033[35mError 121 - Var not found\033[0m")
                             return
                 if tp1 != tp2:
-                    result_if = False
+                    ifer_res = False
+                    ifer = True; return 
                 else:
-                    result_if = eval(f"{el1} == {el2}")
+                    ifer_res = eval(f"{el1} == {el2}")
+                    ifer = True; return 
         else:
-            print("Error 113 - don`t find open symbol for body")
+            print("\033[35mError 113 - don`t find open symbol for body\033[0m")
+            return
     elif "=" in com:
         coms = com.split("=")
         coms[0] = coms[0].strip()
         if coms[0].startswith("1") or coms[0].startswith("2") or coms[0].startswith("3") or coms[0].startswith("4") or coms[0].startswith("5") or coms[0].startswith("6") or coms[0].startswith("7") or coms[0].startswith("8") or coms[0].startswith("9"):
-            print("Error 112 - invalid var name")
+            print("\033[35mError 112 - invalid var name\033[0m")
+            return
         else:
             if coms[1][1:].isdigit():
                 vars_list[coms[0]] = ["int", coms[1][1:]]
@@ -120,13 +125,42 @@ def intepriter(com):
                     if coms[1][1:] in vars_list.keys():
                         vars_list[coms[0]] = [vars_list[coms[1][1:]][0], vars_list[coms[1][1:]][1]]
                     else:
-                        print("Error 121 - Var not found")
+                        print("\033[35mError 121 - Var not found\033[0m")
+                        return
     elif com == "":
         return
-
     else:
-        print("Error 111 - invalid syntax")
+        print("\033[35mError 111 - invalid syntax\033[0m")
+        return
 
-print("RoltonLang ")
+def run_if(doings):
+    for doing in doings:
+        runner(doing)
+
+ifer = False
+ifer_res = None
+list_ifer = []
+
+def intepriter(fase = "std"):
+    global list_ifer, ifer
+    if ifer:
+        fase = "if"
+    if fase == "if":
+        com = input("... ")
+        if com == "}":
+            if ifer_res:
+                ifer = False
+                list_ifer = []
+                run_if(list_ifer)
+                return
+            else:
+                return
+        else:
+            list_ifer.append(com)
+    else:
+        com = input(">>> ")
+        runner(com)
+
+print("-"*50, "\n" + "|" + " "*19 + "RoltonLang", " "*18 + "|", "\n" + "-"*50)
 while True:
     intepriter()
