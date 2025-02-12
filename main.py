@@ -1,3 +1,5 @@
+import sys
+
 vars_list = {}
 
 def printer(args):
@@ -32,7 +34,7 @@ def typing(var):
 #         intepriter(doing)
 
 def runner(com):
-    global ifer_res, ifer
+    global ifer_res, ifer, repeater, list_reps
     if "(" in com and ")" in com:
         func = com.split("(")[0]
         match func:
@@ -65,6 +67,15 @@ def runner(com):
                                 return
             case "exit":
                 raise SystemExit()
+    elif com == "}":
+        if ifer:
+            ifer = False
+            return
+        elif repeater:
+            repeater = False
+            return
+        else:
+            print("\033[35mError 111 - invalid syntax\033[0m")
     elif "if" in com:
         if "{" in com:
             ifer = True
@@ -85,6 +96,7 @@ def runner(com):
                             el1 = el1n
                         else:
                             print("\033[35mError 121 - Var not found\033[0m")
+                            ifer = False
                             return
                 if "\"" in el2:
                     el2 = rl1.replace("\"", "")
@@ -99,6 +111,7 @@ def runner(com):
                             el2 = el2n
                         else:
                             print("\033[35mError 121 - Var not found\033[0m")
+                            ifer = False
                             return
                 if tp1 != tp2:
                     ifer_res = False
@@ -108,12 +121,26 @@ def runner(com):
                     ifer = True; return 
         else:
             print("\033[35mError 113 - don`t find open symbol for body\033[0m")
+            ifer = False
+            return
+    elif "repeats" in com:
+        if "{" in com:
+            repeats = com.replace("repeats", "").replace(" {", "")
+            if not repeats:
+                print("\033[35mError 111 - invalid syntax\033[0m")
+                ifer = False
+                return
+            repeater = True
+            list_reps.append(repeats)
+        else:
+            print("\033[35mError 111 - invalid syntax\033[0m")
             return
     elif "=" in com:
         coms = com.split("=")
         coms[0] = coms[0].strip()
         if coms[0].startswith("1") or coms[0].startswith("2") or coms[0].startswith("3") or coms[0].startswith("4") or coms[0].startswith("5") or coms[0].startswith("6") or coms[0].startswith("7") or coms[0].startswith("8") or coms[0].startswith("9"):
             print("\033[35mError 112 - invalid var name\033[0m")
+            ifer = False
             return
         else:
             if coms[1][1:].isdigit():
@@ -126,6 +153,7 @@ def runner(com):
                         vars_list[coms[0]] = [vars_list[coms[1][1:]][0], vars_list[coms[1][1:]][1]]
                     else:
                         print("\033[35mError 121 - Var not found\033[0m")
+                        ifer = False
                         return
     elif com == "":
         return
@@ -133,18 +161,29 @@ def runner(com):
         print("\033[35mError 111 - invalid syntax\033[0m")
         return
 
+def run_reps(lister):
+    repeatings = lister[0]
+    lister.pop(0)
+    for i in range(int(repeatings[1:])):
+        for com in lister:
+            runner(com)
+
 def run_if(doings):
     for doing in doings:
         runner(doing)
 
+repeater = False
 ifer = False
 ifer_res = None
 list_ifer = []
+list_reps = []
 
 def intepriter(fase = "std"):
-    global list_ifer, ifer
+    global list_ifer, ifer, repeater, list_reps
     if ifer:
         fase = "if"
+    if repeater:
+        fase = "repeats"
     if fase == "if":
         com = input("... ")
         if com == "}":
@@ -157,10 +196,48 @@ def intepriter(fase = "std"):
                 return
         else:
             list_ifer.append(com)
+    elif fase == "repeats":
+        com = input("... ")
+        if com == "}":
+            run_reps(list_reps)
+            repeater = False
+            list_reps = []
+            return
+        else:
+            list_reps.append(com)
     else:
         com = input(">>> ")
         runner(com)
 
-print("-"*50, "\n" + "|" + " "*19 + "RoltonLang", " "*18 + "|", "\n" + "-"*50)
-while True:
-    intepriter()
+def run_file(path):
+    file_get = open(path, "r", encoding = "utf-8")
+    for line in file_get.read().split("\n"):
+        runner(line)
+
+try:
+    filename = sys.argv[1]
+    if ".rolton" not in filename:
+        print("\033[35mError 241 - file don`t have extension \".rolton\"\033[0m")
+        runner("exit()")
+    if "\\" not in filename:
+        if "/" not in filename:
+            print(f"{filename}")
+            print("\033[35mError 242 - enter the absolute path to the file\033[0m")
+            runner("exit()")
+    else:
+        run_file(filename)
+        runner("exit()")
+except SystemExit:
+    runner("exit()")
+except FileNotFoundError:
+    print("\033[35mError 243 - file not found\033[0m")
+    runner("exit()")
+except:
+    pass
+
+def start():
+    print("-"*50, "\n" + "|" + " "*19 + "RoltonLang", " "*18 + "|", "\n" + "-"*50)
+    while True:
+        intepriter()
+
+start()
